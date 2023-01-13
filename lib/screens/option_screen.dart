@@ -1,5 +1,5 @@
 import 'package:bolg_app/colors/colors.dart';
-import 'package:bolg_app/screens/sign_in.dart';
+import 'package:bolg_app/screens/sign_up.dart';
 import 'package:flutter/material.dart';
 import '../const/round_button.dart';
 import 'login_page.dart';

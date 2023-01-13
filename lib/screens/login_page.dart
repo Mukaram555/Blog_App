@@ -1,8 +1,10 @@
 import 'package:bolg_app/colors/colors.dart';
 import 'package:bolg_app/const/round_button.dart';
+import 'package:bolg_app/const/validation_methods.dart';
 import 'package:bolg_app/screens/home_page.dart';
-import 'package:bolg_app/screens/sign_in.dart';
+import 'package:bolg_app/screens/sign_up.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -75,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
                             prefixIcon: const Icon(
                               Icons.email,
                               color: Colors.white70,
-                            ),
+                             ),
 
                             focusedErrorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
@@ -98,9 +100,25 @@ class _LoginPageState extends State<LoginPage> {
                             )),
                         onChanged: (String value) {
                           email = value;
+                          validateEmail(value.toString());
                         },
                         validator: (value) {
-                          return value!.isEmpty ? "Please Enter Your Email" : null;
+                          if (value == null) {
+                            setState(() {
+                              showSpinner = false;
+                            });
+                            return 'Email is Required';
+                          }
+                          if (!RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value)) {
+                            setState(() {
+                              showSpinner = false;
+                            });
+                            return 'Invalid Email';
+                          }
+                          setState(() {
+                            showSpinner = false;
+                          });
+                          return null;
                         },
                       ),
                       SizedBox(
@@ -145,31 +163,53 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         onChanged: (String value) {
                           password = value;
+                          validatePassword(value.toString());
                         },
-                        validator: (value) {
-                          return value!.isEmpty ? "Please Enter Your Password" : null;
-                        },
+                        // validator: (value) {
+                        //   if (value!.isEmpty) {
+                        //     return 'Password is Required';
+                        //   }
+                        //   if (value.length < 6) {
+                        //     return 'Password must be at least 6 characters';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                       SizedBox(
                         height: MediaQuery.of(context).size.height * 0.06,
                       ),
-                      RoundButton(title: "Log In", onPressed: () {
+                      RoundButton(title: "Log In", onPressed: () async{
                         setState(() {
                           showSpinner = true;
                         });
                         if(_formKey.currentState!.validate()){
                           try{
-                             _auth.signInWithEmailAndPassword(email: email.toString().trim(), password: password.toString().trim(),);
-                            toastMessage("User LogIn Successfully");
-                            setState(() {
-                              showSpinner = false;
-                            });
-                            Navigator.push(context, MaterialPageRoute(builder: (context)=>const HomePage(),),);
-                          }catch(e){
-                            toastMessage(e.toString(),);
-                            setState(() {
-                              showSpinner = false;
-                            });
+                             final result = await _auth.signInWithEmailAndPassword(email: email.toString().trim(), password: password.toString().trim(),);
+                            if(result != null){
+                              toastMessage("User LogIn Successfully");
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=>const HomePage(),),);
+                            }
+                            else{
+                              setState(() {
+                                showSpinner = false;
+                                toastMessage("Email or Password is incorrect");
+                              });
+                            }
+                          }on FirebaseAuthException catch (e) {
+                            if (e.code == 'user-not-found') {
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              toastMessage('No user found for that email.');
+                            } else if (e.code == 'wrong-password') {
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              toastMessage('Wrong password provided for that user.');
+                            }
                           }
                         }
                       }),

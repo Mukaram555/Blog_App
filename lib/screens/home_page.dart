@@ -1,5 +1,7 @@
 import 'package:bolg_app/colors/colors.dart';
 import 'package:bolg_app/screens/add_post.dart';
+import 'package:bolg_app/screens/login_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -37,7 +39,25 @@ class _HomePageState extends State<HomePage> {
               );
             },
             child: const Icon(Icons.add,size: 20,),
-          )
+          ),
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.02,
+          ),
+          InkWell(
+            onTap: () async{
+              await FirebaseAuth.instance.signOut();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LoginPage(),
+                ),
+              );
+            },
+            child: const Icon(Icons.lock,size: 20,),
+          ),
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.02,
+          ),
         ],
         automaticallyImplyLeading: false,
         centerTitle: true,

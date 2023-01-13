@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../const/validation_methods.dart';
+
 class SignIn extends StatefulWidget {
   const SignIn({Key? key}) : super(key: key);
 
@@ -144,6 +146,7 @@ class _SignInState extends State<SignIn> {
                             )),
                         onChanged: (String value) {
                           password = value;
+                          validateEmail(value.toString());
                         },
                         validator: (value) {
                           if(value!.isEmpty){
@@ -196,6 +199,7 @@ class _SignInState extends State<SignIn> {
                             ),),
                         onChanged: (String value) {
                           cPassword = value;
+                          validatePassword(value.toString());
                         },
                         validator: (value) {
                           if (value!.isEmpty) {
@@ -210,7 +214,7 @@ class _SignInState extends State<SignIn> {
                       SizedBox(
                         height: MediaQuery.of(context).size.height * 0.06,
                       ),
-                      RoundButton(title: "Sign Up", onPressed: () {
+                      RoundButton(title: "Sign Up", onPressed: () async{
                         if(_formKey.currentState!.validate()) {
                           setState(() {
                             showSpinner = true;
@@ -218,8 +222,7 @@ class _SignInState extends State<SignIn> {
 
                           try{
 
-                            _auth.createUserWithEmailAndPassword(email: email.toString().trim(), password: password.toString().trim());
-
+                            await _auth.createUserWithEmailAndPassword(email: email.toString().trim(), password: password.toString().trim());
                             toastMessage("User Successfully Created");
                             setState(() {
                               showSpinner = false;
@@ -227,11 +230,20 @@ class _SignInState extends State<SignIn> {
 
                             Navigator.push(context, MaterialPageRoute(builder: (context)=>const OptionScreen(),),);
 
-                          }catch(e){
+                          }on FirebaseAuthException catch (e) {
+                            if (e.code == 'weak-password') {
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              toastMessage('The password provided is too weak.');
+                            } else if (e.code == 'email-already-in-use') {
+                              setState(() {
+                                showSpinner = false;
+                              });
+                              toastMessage('The account already exists for that email.');
+                            }
+                          } catch (e) {
                             toastMessage(e.toString());
-                            setState(() {
-                              showSpinner = false;
-                            });
                           }
                         }
                       }),
