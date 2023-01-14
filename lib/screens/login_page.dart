@@ -165,15 +165,15 @@ class _LoginPageState extends State<LoginPage> {
                           password = value;
                           validatePassword(value.toString());
                         },
-                        // validator: (value) {
-                        //   if (value!.isEmpty) {
-                        //     return 'Password is Required';
-                        //   }
-                        //   if (value.length < 6) {
-                        //     return 'Password must be at least 6 characters';
-                        //   }
-                        //   return null;
-                        // },
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Password is Required';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
                       ),
                       SizedBox(
                         height: MediaQuery.of(context).size.height * 0.06,

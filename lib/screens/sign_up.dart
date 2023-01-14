@@ -222,14 +222,12 @@ class _SignInState extends State<SignIn> {
 
                           try{
 
-                            await _auth.createUserWithEmailAndPassword(email: email.toString().trim(), password: password.toString().trim());
+                            final userCreated = await _auth.createUserWithEmailAndPassword(email: email.toString().trim(), password: password.toString().trim());
                             toastMessage("User Successfully Created");
                             setState(() {
                               showSpinner = false;
                             },);
-
                             Navigator.push(context, MaterialPageRoute(builder: (context)=>const OptionScreen(),),);
-
                           }on FirebaseAuthException catch (e) {
                             if (e.code == 'weak-password') {
                               setState(() {

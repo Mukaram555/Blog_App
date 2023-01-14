@@ -1,15 +1,15 @@
 import 'dart:io';
-import 'package:bolg_app/const/round_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:bolg_app/colors/colors.dart';
+import 'package:bolg_app/const/round_button.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
-import '../colors/colors.dart';
+
+import 'home_page.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({Key? key}) : super(key: key);
@@ -19,140 +19,119 @@ class AddPostScreen extends StatefulWidget {
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-  @override
-  Widget build(BuildContext context) {
 
-    final postReference = FirebaseDatabase.instance.ref().child("Posts");
-    // firebase_storage.FirebaseStorage storage = firebase_storage.FirebaseStorage.instance;
-    File? image;
-    final formKey = GlobalKey<FormState>();
-    TextEditingController titleController = TextEditingController();
-    TextEditingController descriptionController = TextEditingController();
-    final picker = ImagePicker();
-    FirebaseAuth auth = FirebaseAuth.instance;
-    bool showSpinner = false;
-    Future getImageGallery()async{
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-      setState(() {
-        if(pickedFile != null){
-          image = File(pickedFile.path);
-        }
-        else{
-          toastMessage("No Image Selected");
-        }
-      });
-    }
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool showSpinner = false;
+  final postRef = FirebaseDatabase.instance.ref().child("Posts");
+  FirebaseStorage storage = FirebaseStorage.instance;
 
-    Future getCameraImage() async{
-      final pickedFile = await picker.pickImage(source: ImageSource.camera);
-      setState(() {
-        if(pickedFile != null){
-          image = File(pickedFile.path);
-        }
-        else{
-          toastMessage("No Image Selected");
-        }
-      });
-    }
+  File? _image;
+  final ImagePicker picker = ImagePicker();
+  final _formKey = GlobalKey<FormState>();
+  TextEditingController titleController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
 
-    void dialog(context) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              content: SizedBox(
-                height: 120,
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        getCameraImage();
-                        Navigator.pop(context);
-                      },
-                      child: const ListTile(
-                        title: Text(
-                          "Camera",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        leading: Icon(Icons.camera_alt),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () {
-                        getImageGallery();
-                        Navigator.pop(context);
-                      },
-                      child: const ListTile(
-                        title: Text(
-                          "Gallery",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        leading: Icon(Icons.photo),
-                      ),
-                    ),
-                  ],
+  Future getImageGallery() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      if(pickedFile != null){
+        _image = File(pickedFile.path);
+      }else{
+        toastMessage("No Image Selected");
+      }
+    });
+  }
+
+  Future getCameraImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    setState(() {
+      if(pickedFile != null){
+        _image = File(pickedFile.path);
+      }else{
+        toastMessage("No Image Selected");
+      }
+    });
+  }
+  
+  void dialogAlert(context){
+    showDialog(context: context, builder: (BuildContext context){
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        content: SizedBox(
+          height: 120,
+          child: Column(
+            children: [
+              InkWell(
+                onTap: (){
+                  getCameraImage();
+                  Navigator.pop(context);
+                },
+                child: const ListTile(
+                  leading: Icon(Icons.camera_alt),
+                  title: Text("Camera"),
                 ),
               ),
-            );
-          });
-    }
+              InkWell(
+                onTap: (){
+                  getImageGallery();
+                  Navigator.pop(context);
+                },
+                child: const ListTile(
+                  leading: Icon(Icons.photo),
+                  title: Text("Gallery"),
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    });
+  }
 
+
+  @override
+  Widget build(BuildContext context) {
     return ModalProgressHUD(
       inAsyncCall: showSpinner,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: appbarBackgroundColorAddBlog,
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          centerTitle: true,
-          title: Text(
-            "Add Blog",
-            style: GoogleFonts.playfairDisplay(
-              color: appBarTextColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
+        backgroundColor: const Color(0xffF5F5F5),
+        appBar: AppBar(title: const Text("Upload Blog"),
+        centerTitle: true,
+        backgroundColor: appbarBackgroundColorAddBlog,
         ),
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 InkWell(
-                  onTap: () {
-                    dialog(context);
+                  onTap: (){
+                    dialogAlert(context);
                   },
                   child: Center(
                     child: SizedBox(
-                      height: MediaQuery.of(context).size.height * .2,
-                      width: MediaQuery.of(context).size.width * 1,
-
-                      child: image != null ? Image.file(
-                        image!.absolute,
-                      width: 100,
+                      width: MediaQuery.of(context).size.width *1,
+                      height: MediaQuery.of(context).size.height * 0.2,
+                      child: _image != null ? ClipRRect(
+                        child: Image.file(
+                          _image!.absolute,
+                          height: 100,
+                          width: 100,
+                          fit: BoxFit.cover,
+                        ),
+                      ):Container(
+                        decoration: BoxDecoration(
+                          color: containerBackgroundColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        width: 100,
                         height: 100,
-                        fit: BoxFit.fitHeight,
-                      ): Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: containerBackgroundColor,
-                              ),
-                              width: 100,
-                              height: 100,
-                              child: Icon(
-                                Icons.camera_alt_outlined,
-                                color: iconColorForImage,
-                                size: 90,
-                              ),
-                            ),
+                        child: const Icon(Icons.camera_alt_outlined,size: 80,color: Colors.blue,),
+                      ),
                     ),
                   ),
                 ),
@@ -160,138 +139,107 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   height: MediaQuery.of(context).size.height * 0.04,
                 ),
                 Form(
-                  key: formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: titleController,
-                        style: const TextStyle(color: Colors.black, fontSize: 18),
-                        decoration: InputDecoration(
-                          hintText: "Enter Blog Title here...",
-                          labelText: "Title",
-                          labelStyle: const TextStyle(color: Colors.black38),
-                          hintStyle: const TextStyle(color: Colors.black38),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.blue),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.red),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.red),
-                          ),
-                          errorStyle: TextStyle(color: textColor),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.black54),
-                          ),
+                  key: _formKey,
+                    child: Column(
+                  children: [
+                    TextFormField(
+                      controller: titleController,
+                      keyboardType: TextInputType.text,
+                      minLines: 1,
+                      decoration: InputDecoration(
+                        hintText: "Title...",
+                        labelText: "Title",
+                        labelStyle: TextStyle(color: appBarTextColor,fontSize: 18,),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.blue,width: 1,),
                         ),
-                        validator: (value) {
-                          return value!.isEmpty
-                              ? "Please Enter Blog Title"
-                              : null;
-                        },
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.greenAccent,width: 1,),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        enabledBorder:  OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.blue,width: 1,),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.04,
-                      ),
-                      TextFormField(
-                        controller: descriptionController,
-                        maxLines: 5,
-                        style: const TextStyle(color: Colors.black, fontSize: 18),
-                        decoration: InputDecoration(
-                          hintText: "Enter the Details here...",
+                    ),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.04,
+                    ),
+                    TextFormField(
+                      controller: descriptionController,
+                      maxLines: 6,
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(
+                          hintText: "Description...",
                           labelText: "Description",
-                          labelStyle: const TextStyle(
-                            color: Colors.black38,
-                          ),
-                          hintStyle: const TextStyle(color: Colors.black38),
-                          enabledBorder: OutlineInputBorder(
+                          floatingLabelAlignment: FloatingLabelAlignment.start,
+                          labelStyle: TextStyle(color: appBarTextColor,fontSize: 18,),
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.blue),
+                            borderSide: const BorderSide(color: Colors.blue,width: 1,),
                           ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.red),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.red),
-                          ),
-                          errorStyle: TextStyle(color: textColor),
                           focusedBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.greenAccent,width: 1,),
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Colors.black54),
                           ),
+                        enabledBorder:  OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.blue,width: 1,),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        validator: (value) {
-                          return value!.isEmpty
-                              ? "Please Enter Blog Title"
-                              : null;
-                        },
                       ),
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.04,
-                      ),
-                      RoundButton(
-                          title: "Upload Blog",
-                          sizeOfText: 20,
-                          onPressed: () async{
+                    ),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.08,
+                    ),
+                    RoundButton(title: "Post Blog", onPressed: () async{
+                      setState(() {
+                        showSpinner = true;
+                      });
+                      try{
+                        int date = DateTime.now().millisecondsSinceEpoch;
 
-                            setState(() {
-                              showSpinner = true;
-                            });
-                            try{
+                        var refer = await FirebaseStorage.instance.ref("/blogapp$date").child('images').putFile(_image!.absolute);
+                        TaskSnapshot uploadTask = refer;
+                        await Future.value(uploadTask);
+                        var newUrl =await refer.ref.getDownloadURL();
+                        final User? user = _auth.currentUser;
+                        postRef.child("Post List").child(date.toString()).set({
+                          "pPostID": date.toString(),
+                          "pImage" : newUrl.toString(),
+                          "pTime": date.toString(),
+                          "pTitle": titleController.text.toString(),
+                          "pDescription": descriptionController.text.toString(),
+                          "pEmail": user!.email,
+                          "pId": user.uid,
+                        }).then((value){
+                          setState(() {
+                            showSpinner = false;
+                          });
+                          toastMessage("Post Published");
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>const HomePage(),),);
+                        }).onError((error, stackTrace) {
+                          setState(() {
+                            showSpinner = false;
+                          });
+                          toastMessage(error.toString());
+                        });
 
-                              int date = DateTime.now().millisecondsSinceEpoch;
-
-                              firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance.ref("/BlogApp $date");
-                              UploadTask uploadTask = ref.putFile(image!.absolute);
-
-                              await Future.value(uploadTask);
-                              final User? user = auth.currentUser;
-
-                              var newUrl = await ref.getDownloadURL();
-                              postReference.child("Post List").child(date.toString()).set({
-
-                                "pID" : date.toString(),
-                                "pImage" : newUrl.toString(),
-                                "pTime" : date.toString(),
-                                "pTitle" : titleController.text.toString(),
-                                "pDescription" : descriptionController.text.toString(),
-                                "uEmail" : user!.email.toString(),
-                                "uID" : user.uid.toString(),
-
-                              }).then((value){
-                                toastMessage("Post Published");
-                                setState(() {
-                                  showSpinner = false;
-                                });
-                              }).onError((error, stackTrace) {
-                                setState(() {
-                                  showSpinner = false;
-                                });
-                                toastMessage(error.toString());
-                              });
-
-                            }catch(e){
-                              setState(() {
-                                showSpinner = false;
-                              });
-                              toastMessage(e.toString());
-                            }
-                          }
-        ),
-                    ],
-                  ),
-                ),
+                      }catch(e){
+                        toastMessage(e.toString());
+                        setState(() {
+                          showSpinner = false;
+                        });
+                      }
+                    },sizeOfText: 24,),
+                  ],
+                ),),
               ],
             ),
           ),
         ),
+
       ),
     );
   }
